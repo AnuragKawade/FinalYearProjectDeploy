@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Sessions - Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        body { background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .session-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; }
+        .session-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .session-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #1FB8CD; }
+        .stat-label { font-size: 12px; color: #666; margin-top: 5px; }
+        .chart-container { height: 200px; margin-top: 15px; }
+        .no-sessions { text-align: center; padding: 40px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1 id="user-title">User Sessions</h1>
+                <p id="user-email" style="color: #666;"></p>
+            </div>
+            <button onclick="window.location.href='admin.html'" style="padding: 10px 20px; background: #1FB8CD; color: white; border: none; border-radius: 5px; cursor: pointer;">← Back to Admin</button>
+        </div>
+
+        <div id="sessions-container"></div>
+        <div id="no-sessions" class="no-sessions" style="display: none;">
+            <h3>No sessions found for this user</h3>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId');
+        const token = localStorage.getItem('token');
+
+        if (!token || !userId) {
+            window.location.href = 'admin.html';
+        }
+
+        async function loadUserSessions() {
+            try {
+                const response = await fetch(`http://localhost:3000/api/admin/sessions/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.sessions.length > 0) {
+                    displaySessions(data.sessions);
+                } else {
+                    document.getElementById('no-sessions').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+                alert('Failed to load sessions');
+            }
+        }
+
+        function displaySessions(sessions) {
+            const container = document.getElementById('sessions-container');
+            
+            sessions.forEach((session, index) => {
+                const card = document.createElement('div');
+                card.className = 'session-card';
+                
+                const startTime = new Date(session.startTime).toLocaleString();
+                const duration = formatDuration(session.duration);
+                
+                card.innerHTML = `
+                    <div class="session-header">
+                        <div>
+                            <h3>Session ${sessions.length - index}</h3>
+                            <p style="color: #666; font-size: 14px;">${startTime}</p>
+                        </div>
+                        <button onclick="exportSession('${session._id}')" style="padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Export CSV</button>
+                    </div>
+                    
+                    <div class="session-stats">
+                        <div class="stat">
+                            <div class="stat-value">${Math.round(session.averageAttention)}%</div>
+                            <div class="stat-label">Avg Attention</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">${duration}</div>
+                            <div class="stat-label">Duration</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">${session.dataPoints}</div>
+                            <div class="stat-label">Data Points</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">${session.sessionData ? session.sessionData.length : 0}</div>
+                            <div class="stat-label">Frames</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="chart-${session._id}"></canvas>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+                
+                // Create chart
+                setTimeout(() => createSessionChart(session), 100);
+            });
+        }
+
+        function createSessionChart(session) {
+            const canvas = document.getElementById(`chart-${session._id}`);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const data = session.sessionData || [];
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map((_, i) => i),
+                    datasets: [{
+                        label: 'Attention Score',
+                        data: data.map(d => d.attentionScore),
+                        borderColor: '#1FB8CD',
+                        backgroundColor: 'rgba(31, 184, 205, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,0.1)' } },
+                        x: { display: false }
+                    }
+                }
+            });
+        }
+
+        function formatDuration(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${hrs}h ${mins}m ${secs}s`;
+        }
+
+        function exportSession(sessionId) {
+            window.location.href = `http://localhost:3000/api/admin/export/${sessionId}`;
+        }
+
+        loadUserSessions();
+    </script>
+</body>
+</html>
