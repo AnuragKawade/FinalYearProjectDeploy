@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -13,7 +14,13 @@ app.use(cors());
 app.use(express.static('.'));
 
 // MongoDB Connection
-mongoose.connect('mongodb+srv://anuragkawade17_db_user:CvF5MgmAA5JZPJUd@cluster0.0zzftls.mongodb.net/attention_tracker?retryWrites=true&w=majority', {
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  console.error('ERROR: MONGODB_URI environment variable is not set');
+  process.exit(1);
+}
+
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 3000,
@@ -67,19 +74,15 @@ const Session = mongoose.model('Session', sessionSchema);
 sessionSchema.index({ userId: 1, startTime: -1 });
 sessionSchema.index({ averageAttention: -1 });
 
-// ============================================================================
-// EMAIL CONFIGURATION - UPDATE THESE 3 LOCATIONS BEFORE TESTING EMAIL
-// ============================================================================
-// Step 1: Go to https://myaccount.google.com/apppasswords
-// Step 2: Generate App Password for "Mail"
-// Step 3: Update the 3 locations marked with ⚠️ UPDATE below
-// ============================================================================
+// Email Configuration
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'anuragkawade17@gmail.com',        // ⚠️ UPDATE #1: Your Gmail address
-    pass: 'lfubifhqjvgtdjdd'              // ⚠️ UPDATE #2: Your 16-char App Password (no spaces)
+    user: EMAIL_USER,
+    pass: EMAIL_PASS
   }
 });
 
@@ -88,7 +91,7 @@ async function sendLowAttentionAlert(user, session) {
   if (!admin) return;
 
   const mailOptions = {
-    from: 'your-email@gmail.com',         // ⚠️ UPDATE #3: Same Gmail as UPDATE #1
+    from: EMAIL_USER,
     to: admin.email,
     subject: `Low Attention Alert - ${user.username}`,
     html: `
@@ -123,6 +126,9 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+// JWT Configuration
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
 // Login
 app.post('/api/login', async (req, res) => {
   try {
@@ -131,7 +137,7 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ userId: user._id, role: user.role }, 'your-secret-key', { expiresIn: '24h' });
+    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token, username: user.username, role: user.role });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -143,7 +149,7 @@ const auth = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ message: 'No token provided' });
   try {
-    const decoded = jwt.verify(token, 'your-secret-key');
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
     next();
