@@ -1,4 +1,7 @@
 
+// Load config from config.js which is loaded in HTML before this script
+// If config.js hasn't loaded yet, we'll wait or provide a fallback
+
 let faceLandmarker = null;
 let runningMode = "VIDEO";
 let webcamRunning = false;
@@ -3073,7 +3076,7 @@ async function saveVideoAnalysisToDatabase(analysisData, avgAttention) {
   try {
     showNotification('Saving video analysis to database...', 'info');
     
-    const response = await fetch('http://localhost:3000/api/sessions', {
+    const response = await fetch(`${window.API_BASE_URL}/api/sessions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

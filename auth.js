@@ -33,7 +33,7 @@ async function saveSessionToDatabase(sessionData) {
   console.log('Saving session to database:', sessionData);
 
   try {
-    const response = await fetch('http://localhost:3000/api/sessions', {
+    const response = await fetch(`${window.API_BASE_URL}/api/sessions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ async function loadUserSessions() {
   if (!token) return [];
 
   try {
-    const response = await fetch('http://localhost:3000/api/sessions', {
+    const response = await fetch(`${window.API_BASE_URL}/api/sessions`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

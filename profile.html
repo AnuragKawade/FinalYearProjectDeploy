@@ -115,6 +115,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         const token = localStorage.getItem('token');
         if (!token) window.location.href = 'login.html';
@@ -123,7 +124,7 @@
 
         async function loadProfile() {
             try {
-                const response = await fetch('http://localhost:3000/api/profile', {
+                const response = await fetch(`${window.API_BASE_URL}/api/profile`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
@@ -160,7 +161,7 @@
 
         async function updateProfilePhoto() {
             try {
-                const response = await fetch('http://localhost:3000/api/profile', {
+                const response = await fetch(`${window.API_BASE_URL}/api/profile`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -182,7 +183,7 @@
             const dateOfBirth = document.getElementById('dob').value;
 
             try {
-                const response = await fetch('http://localhost:3000/api/profile', {
+                const response = await fetch(`${window.API_BASE_URL}/api/profile`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -221,7 +222,7 @@
 
         async function loadStats() {
             try {
-                const response = await fetch('http://localhost:3000/api/sessions', {
+                const response = await fetch(`${window.API_BASE_URL}/api/sessions`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();

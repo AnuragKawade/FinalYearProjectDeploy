@@ -172,6 +172,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         const token = localStorage.getItem('token');
         if (!token) {
@@ -200,7 +201,7 @@
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#666;">Loading leaderboard...</td></tr>';
             
             try {
-                const res = await fetch('http://localhost:3000/api/leaderboard', {
+                const res = await fetch(`${window.API_BASE_URL}/api/leaderboard`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();

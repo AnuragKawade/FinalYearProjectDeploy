@@ -261,6 +261,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
@@ -277,28 +278,28 @@
             console.log('Loading admin data...');
             try {
                 console.log('Fetching users...');
-                const usersRes = await fetch('http://localhost:3000/api/admin/users', {
+                const usersRes = await fetch(`${window.API_BASE_URL}/api/admin/users`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const usersData = await usersRes.json();
                 console.log('Users data:', usersData);
 
                 console.log('Fetching sessions...');
-                const sessionsRes = await fetch('http://localhost:3000/api/sessions', {
+                const sessionsRes = await fetch(`${window.API_BASE_URL}/api/sessions`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const sessionsData = await sessionsRes.json();
                 console.log('Sessions data:', sessionsData);
 
                 console.log('Fetching leaderboard...');
-                const leaderboardRes = await fetch('http://localhost:3000/api/admin/leaderboard', {
+                const leaderboardRes = await fetch(`${window.API_BASE_URL}/api/admin/leaderboard`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const leaderboardData = await leaderboardRes.json();
                 console.log('Leaderboard data:', leaderboardData);
 
                 console.log('Fetching stats...');
-                const statsRes = await fetch('http://localhost:3000/api/admin/stats', {
+                const statsRes = await fetch(`${window.API_BASE_URL}/api/admin/stats`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const statsData = await statsRes.json();
