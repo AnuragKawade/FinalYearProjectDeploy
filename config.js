@@ -4,7 +4,7 @@ const API_CONFIG = {
     baseURL: 'http://localhost:3000'
   },
   production: {
-    baseURL: 'https://final-year-project1.vercel.app'
+    baseURL: 'https://final-year-project-deploy.vercel.app'
   }
 };
 
