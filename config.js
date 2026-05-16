@@ -1,10 +1,10 @@
 // API Configuration for different environments
 const API_CONFIG = {
   development: {
-    baseURL: 'http://localhost:3001'
+    baseURL: 'http://localhost:3000'
   },
   production: {
-    baseURL: '' // Use relative URLs in production (same domain)
+    baseURL: 'https://final-year-project1.vercel.app'
   }
 };
 
